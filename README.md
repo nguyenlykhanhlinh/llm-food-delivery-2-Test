@@ -48,13 +48,13 @@ https://github.com/lucastononro/llm-food-delivery/assets/105813423/29ad5e7b-bb28
 # 3. Quick set-up
 
 ## 3.1. Create a .env
-- Create an OpenAI API key
-- Create a Pinecone API key and Index named `auto-food-order`
+- Create an Groq API key
+- Create a Qdrant API key and Index named `auto-food-order`
 - Find [.env.example](./backend/.env.example) and write your API keys
-- Rename `.env.example` to `.env`
+- Rename `.env.example` to `.env.local`
 
 ## 3.2. Create a database and populate it
-- Create a pinecone index
+- Create a Qdrant index
 - Create a database following the tutorial in [here](./backend/src/data/README.md)
 
 ## 3.3 Configure your model
