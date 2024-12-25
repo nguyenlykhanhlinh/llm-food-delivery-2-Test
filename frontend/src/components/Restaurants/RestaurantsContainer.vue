@@ -71,20 +71,15 @@
       },
       async getRestaurants() {
         try {
-          this.restaurants = [];
-          const response = await axios.get(this.baseApiUrl + "/restaurants");
-          const data = response.data;
-          for (let i = 0; i < data.length; i++) {
-            this.restaurants.push({
-              name: data[i].name,
-              image: data[i].image,
-              // image: null,
-              uuid: data[i].id,
-              description: data[i].description,
-            });
-          }
+          const response = await axios.get(`${this.baseApiUrl}/restaurants`);
+          this.restaurants = response.data.map(restaurant => ({
+            name: restaurant.name,
+            description: restaurant.description,
+            uuid: restaurant.id,
+            image: restaurant.image ? `${import.meta.env.VITE_APP_API_URL}${restaurant.image}` : null
+          }));
         } catch (error) {
-          console.log(error);
+          console.error('Error fetching restaurants:', error);
         }
       },
     },

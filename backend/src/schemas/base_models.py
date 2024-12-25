@@ -43,11 +43,3 @@ class ChatRequest(BaseModel):
     function_call: bool=True
 
 
-## Audio system
-class AudioTranscriptRequest(BaseModel):
-    audio: str
-class AudioResponse(BaseModel):
-    message: str
-
-class AudioTTSRequest(BaseModel):
-    text: str

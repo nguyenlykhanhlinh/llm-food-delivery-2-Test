@@ -12,7 +12,7 @@ python-dotenv>=1.0.0
 python-multipart>=0.0.6
 aiohttp>=3.8.3
 fastapi-utils>=0.2.1
-envyaml>=1.10.211231
+envyaml>=1.10.211231 
 tokenizers>=0.13.2
 pydub>=0.25.1
 llama_index>=0.9.10
@@ -25,5 +25,10 @@ qdrant-client
 nltk>=3.8.1
 PyMuPDF>=1.23.22
 llama-index-vector-stores-qdrant
+llama-index-vector-stores-pinecone
+llama-index-retrievers-bm25
+llama-index-llms-openai
+pinecone
 uvicorn
 pandas
+openai

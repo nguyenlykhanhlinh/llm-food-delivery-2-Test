@@ -1,0 +1,255 @@
+Bạn là một developer giỏi, bạn nắm vững cách xử lý code một project về LLM-food-delivery này.
+Bạn vạch lá tìm sâu, khi một chương trình backend chạy không lên thì bạn sẽ đi xem lại từng file code để biết đâu là nguyên nhân khiến cho backend không hoạt động và bạn fix lỗi code đó.
+
+*Vấn đề tôi đang gặp phải*:
+- Một chương trình backend chạy không lên, nguyên nhân là gi?
+- Tại sao tôi lại chạy không lên chương trình backend này.
+- Tôi đang gặp vấn đề với file main.py, cách khởi động chương trình chatbot ở backend để thực hiện các action nhận được từ frontend.
+- Tôi không biết sửa code với FastAPI này thế nào để nó có thể hoạt động với frontend nhỉ. 
+- Tôi đã chỉnh sửa một chút ở code main.py : tôi cho trực tiếp url của frontend vào, nhưng khi chạy code lên thì backend nó không hiện lên các ảnh món ăn như video họ demo.
+- Tôi yêu cầu bạn đọc kĩ vấn đề tôi gặp phải ở đây:
+Đây là dự án tôi đi clone từ một nguồn trên github (link: https://github.com/lucastononro/llm-food-delivery/tree/main).
+Họ dùng docker để đóng gói dự án và điều này làm cho tôi khi clone về không biết cách chạy chương trình của frontend và backend như thế nào.
+Tôi để ý thì họ phải chạy song song cả backend và fronteng thì những ảnh món ăn mới hiện lên có phải không? -> Hãy giải đáp cho tôi biết.
+Code của họ tôi clone về ở backend ban đầu không có thư mục static để ảnh phía backend hiện lên và tôi đã chỉnh sửa phần này bằng cách cho thêm thư mục ảnh từ frontend cho sang backend, nghĩa là cả frontend và backend đều chứa thư mục ảnh.
+Nhưng hôm nay tôi chạy lại thì mỗi phía frontend hiện lên còn những món ăn ở backend lại không hiện đồng thời, tức là chỉ có mỗi frontend thôi còn backend tôi đang bị lỗi.
+Tôi đang chưa tìm được cách giải quyết fix vấn đề frontend họ để một đường dẫn riêng và backend một đường dẫn riêng thì tại sao họ lại có thể vấn khởi động được cả hai chương trình đó lên.
+Tôi chỉ được xem video demo nên tôi đang không rõ cái cách họ chạy chương trình thế nào. làm sao mà chạy được cả front lẫn back và chatbot hoạt động tốt nhỉ. 
+Tôi đã chỉnh sửa lại code vì có một số thư viện như llamaindex họ nâng cấp thư viện lên version mới, tôi đã chỉnh sửa lại cho bạn rồi.
+Tôi đang khó hiểu có cách nào để tôi test riêng phần chatbot ở backend không.
+Làm thế nào để chạy test riêng phần chatbot ở backend được nhỉ, vì nếu build từng file riêng lẻ và chỉ chạy mỗi file main.py để khởi động FlaskAPI lên không thì tôi không thể biết rõ được là chatbot nớ hoạt động ở đâu trong backend và câu trả lời của nó như thế thế nào. 
+Tôi đang gặp vấn đề với FlaskAPI nữa, khi tôi không biết cách code nó ra sao để call đến router của frontend.
+Làm thế nào để test riêng phần endpoint ở backend với chatbot nhỉ, test thử với những câu hỏi như add pizza this cart thì nó sẽ tự động call đến @action add this cart và thêm món đó vào giỏ hàng ấy.
+Tôi không hiểu rõ được cái endpoints và router ở backend để test riêng phần này với chatbot xem nó có hoạt động đúng với kịch bản mà tôi xem ở video demo của họ chưa.
+Ở video demo của họ, khi họ chat những câu sau đây thì chatbot phía backend đều nhận được yêu cầu và sau đó nó sẽ call đến cái function đó rồi thực hện các yêu cầu từ user. -> Tôi muốn chạy lên kết quả như họ đã demo *Lưu ý quan trọng*.
+Họ đã chat như sau: (ACtion tracking) mục 5.2. Action tracking: 
+Chatbot: Hello, i am here to help you order your dinner, please tell me what you want to order this time! 
+User: Add this Pad Thai to the shopping cart 
+Chatbot: I've added the Pad to your shopping cart, Is there anything else you would like to order from Thai Delight? 
+User: where am i in the interface? 
+Chatbot: You are currently on the restaurant page for Pizza Palace. You've previously added Pad Thai from Thai Delight and 4 Singha Beers to your shopping cart. Would you like to order something from Pizza palace or check out your shopping cart? 
+User: What did i just do?
+-> Ở đây họ đang chat bằng english và liệu tôi có thể thay đổi chỉnh sửa prompt để chat bằng vietnamese không. 
+Đây là kịch bản họ chat ở mục 5.1. Searching for a restaurant, opening it, closing it, adding to shopping cart
+User: Find me a good japanese place? 
+Chatbot: I found two Japanese restaurants for you:
+1. Ramen House: They specialize in Japanese ramen and noodle dishes. Some of their offerings include Tonkotsu Ramen, Shoyu Ramen, Miso Ramen and Takoyaki. 
+User: ok I like the Ramen House, lets go for this one 
+Chatbot: Great choice! We are now in the Ramen House. Here's a quick look at their menu: 
+- Tonkotsu Ramen: Ramen with port bone broth, pork belly and soft-boiled egg 
+- Miso Ramen: Ramen with miso broth, com and soft-boiled egg 
+- Takoyaki: Fried octopus balls with bonito flakes and manyo 
+- Green Tea: Hot Japanese green tea 
+- Plum Wine: Sweet Japanese wine made from plums 
+What would you like to order? 
+User: hmm... didn't quite like the menu, go back please 
+Chatbot: No problem at all! We're back to the main menu. Would you like to check your order. 
+User: I just added some food, but couldn't find the shopping cart, can you open it for me? 
+Chatbot: Sure, here's what currently in your shopping cart: 
+1. Carinats taco: Taco with slow-cooked. Quantity: 1 
+2. Carme Asada : Taco frieds. Quantity: 4 
+Would you like to proceed to checkout or add more items? 
+User: Great.... add 10 more carnitlas and 2 more carme asada. Then you can place the order and close the shopping cart. 
+Chatbot: Your order has been placed successfully! You're ordered 11 carninats and 4 came asada tacos form taco fiesta. Enjoy your meal! Please tell me what you want to order this time!
+Tôi muốn build lại ứng dụng này dành cho người việt thì tôi cần phải thay đổi data và logic code như thế nào. 
+Data ban đầu của họ là tiếng anh liệu tôi có thể thay nó bằng tiếng việt không. 
+Nếu thay data bằng tiếng việt thì phải thay đổi lại prompt sao cho phù hợp với người việt dùng. *Tôi đang suy nghĩ như này*.
+Khi thay đổi data có phải thay đổi lại toàn bộ code không.
+Tôi đã xóa chức năng liên quan đến audio đi rồi vì tạm thời tôi đang chưa cần sử dụng đến nó.
+
+*Mục tiêu của tôi là*:
+- Đầu tiên, tôi muốn bạn giải quyết cho tôi từng vấn đề trên khi tôi gặp phải trong quá trình build code và run code.
+- Tôi yêu cầu bạn cách đề xuất tổ chức lại các file code, logic code của từng file thật rõ ràng, sạch đẹp. 
+- Tôi yêu cầu bạn cải thiện lại toàn bộ code, chính sửa lớp, chính sửa function, chỉnh sửa logic code những chỗ nào mà bạn thấy chưa ưng so với code cũ của họ thì hãy đề xuất chỉnh sửa lại. 
+- Tôi yêu cầu bạn tìm cách giải quyết phía backend, bạn phải tìm cách thế nào đấy để cho cái chatbot nó lên.
+- Tôi yêu cầu bạn code thêm phần test câu trả lời hiển thị ở chatbot backend. 
+- Tôi yêu cầu bạn chỉnh sửa lại tất cả các file code từ đầu, chỉnh sửa những file bạn cho là cần phải sửa vì nó khiến chatbot của tôi không hoạt động.
+- Tôi muốn bạn phải code cho ra kết quả tôi muốn đó là chương trình cả backend và frontend đều phải chạy lên, phần chatbot ở backend và frontend phải hoạt động tốt như kết quả ở video demo. 
+- Tôi muốn bạn xem kĩ ảnh kết quả tôi gửi từ video demo cho bạn, từ ảnh tôi gửi hãy phân tích xem tôi đang code sai ở đâu, từ đó tìm ra nguyên nhân gây ra những vấn đề trên để sửa code cho đúng.
+- Tôi yêu cầu bạn loại bỏ hết chức năng audio, âm thanh đi cho tôi vì tôi chỉ cần gõ chat mà thôi chứ tôi không đủ thời gian để phát triển tính năng audio (speech to text và text to speech như trong readme mô tả). 
+- Tôi yêu cầu bạn chỉnh sưả những file code mà bạn với tư cách là một developer giỏi bạn cho tôi góc nhìn xem cần phải thay đổi lại thế nào để dễ tiếp cận với người mới bắt đầu như tôi.
+- Tôi muốn phải chạy được chương trình chatbot ở cả back và front lên như ảnh video demo tôi sẽ gửi cho bạn ở phần chat with cascade.
+- Tôi muốn một kết quả cuối cùng đó là chương trình phải chạy lên.
+- Tôi yêu cầu bạn giúp tôi cách chuyển từ data tiếng anh thành tiếng việt mà nó không phải đi sửa lại toàn bộ hệ thống code.
+- Tôi muốn bạn dựa vào những mẫu prompt tôi gửi để bạn thay đổi cho tôi một prompt phù hợp và hữu ích với data tiếng việt. 
+- Tôi yêu cầu bạn luôn luôn phải đọc tài liệu tham khảo mà tôi gửi để biết cách sử dụng thư viện đó trong code.
+- Tôi yêu cầu bạn luôn luôn phải tham khảo tài liệu code, tham khảo code mẫu để từ đó biến đổi thành code của mình.
+- Khi gặp khó khăn trong code component nào thì phải hỏi tôi ngay lập tức để tôi tìm tài liệu đó và gửi cho bạn để bạn tiếp tục code cho tôi. *Lưu ý quan trọng.
+
+*Link tài liệu tham khảo*:
+Tôi yêu cầu bạn mỗi khi gặp khó khăn với thành phần nào trong code sử dụng framework llamaindex và model llm api key của openai, FastAPI thì bạn đi đến đoạn Tài liệu tham khảo rồi đọc sau đó tiếp tục tạo code cho tôi. *Lưu ý quan trọng.
+https://fastapi.tiangolo.com/#run-it
+https://fastapi.tiangolo.com/#interactive-api-docs
+https://devdocs.io/fastapi/
+https://devdocs.io/fastapi/advanced/openapi-callbacks/index#an-app-with-callbacks
+https://devdocs.io/fastapi/index#example
+https://devdocs.io/fastapi/index#typer-the-fastapi-of-clis
+https://devdocs.io/fastapi/project-generation/index
+https://github.com/run-llama/llama_index
+
+*Prompt mẫu tôi cung cấp cho bạn*:
+*Prompt 1*:
+("system", """You are an intelligent and helpful AI assistant for an online fashion store.
+Your task is to answer customer questions about products and store policies.
+Use the available tools to search for accurate information and provide appropriate answers.
+            
+Always use Vietnamese to communicate with customers."""),
+("human", "{input}"),
+("ai", "{agent_scratchpad}")
+])
+
+
+*Prompt 2*:
+from langchain.prompts import PromptTemplate
+from langchain.memory import ConversationBufferMemory
+from langchain_core.runnables import RunnablePassthrough
+
+def create_chitchat_chain(llm, shared_memory: ConversationBufferMemory):
+    prompt_template = (
+        "You are a friendly and helpful AI assistant for an online fashion store.\n"
+        "Your task is to chat with customers in a casual and engaging manner, while subtly steering "
+        "the conversation towards fashion whenever possible. Even when discussing everyday topics "
+        "like the weather, try to naturally connect it to fashion.\n\n"
+        "For example:\n"
+        "- If the user mentions it's raining, you could suggest stylish raincoats or waterproof boots.\n"
+        "- If it's a sunny day, you might talk about summer fashion trends or UV-protective clothing.\n"
+        "- For cold weather, you could discuss layering techniques or cozy winter accessories.\n\n"
+        "Always aim to:\n"
+        "1. Be friendly and relatable\n"
+        "2. Show genuine interest in the customer's comments\n"
+        "3. Smoothly transition to fashion-related topics\n"
+        "4. Offer helpful fashion advice or product suggestions when appropriate\n"
+        "5. Gently encourage the customer to explore the store's offerings\n\n"
+        "IMPORTANT: USING THE SAME LANGUAGE WITH CUSTOMER"
+        "Chat history:\n"
+        "{history}\n"
+        "User: {input}\n"
+        "AI: "
+    )
+
+    prompt = PromptTemplate(
+        input_variables=["history", "input"],
+        template=prompt_template
+    )
+
+    chain = (
+        RunnablePassthrough.assign(
+            history=lambda _: shared_memory.load_memory_variables({})["history"]
+        )
+        | prompt
+        | llm
+    )
+
+    return chain
+
+*Prompt 3*:
+import sqlite3
+from typing import Union, List, Dict
+
+from langchain.prompts import PromptTemplate
+from langchain_core.runnables import RunnablePassthrough
+from langchain.tools import tool
+from langchain_google_genai import ChatGoogleGenerativeAI
+
+from shoppinggpt.config import GOOGLE_API_KEY, DATA_PRODUCT_PATH
+
+PRODUCT_RECOMMENDATION_PROMPT = """
+    You are a chatbot assistant specializing in providing product information and
+    recommendations using SQL queries.
+    Your primary tasks are:
+
+    Provide detailed information about a specific product based on user queries.
+    Recommend relevant products to users based on their preferences and requirements.
+
+    The database table 'products' contains the following columns about product information:
+
+    product_code: A unique identifier for each product (TEXT)
+    product_name: The name of the product (TEXT)
+    material: The material composition of the product (TEXT)
+    size: The available sizes of the product (TEXT)
+    color: The available colors of the product (TEXT)
+    brand: The brand that manufactures or sells the product (TEXT)
+    gender: The product for target gender(e.g., male, female, unisex) (TEXT)
+    stock_quantity: The quantity of the product available in stock (INTEGER)
+    price: The price of the product (REAL)
+
+    To provide product information or recommend products, generate an SQL query that:
+
+    Handles product names in a case-insensitive manner and allows for partial matches.
+    Retrieves all relevant columns of information about the requested product or filters products based on criteria.
+    Uses efficient indexing and filtering techniques to retrieve data.
+    Ensures SQL injection prevention by using parameterized queries.
+
+    Output only the SQL query. Do not include any explanations, comments, quotation marks, or additional information. Only output the query itself.
+    Start!
+    Question: {input}
+"""
+
+class ProductDataLoader:
+    def __init__(self, db_path: str):
+        self.db_path = db_path
+        self.conn = None
+
+    def __enter__(self):
+        self.connect()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+    def connect(self):
+        self.conn = sqlite3.connect(self.db_path)
+
+    def close(self):
+        if self.conn:
+            self.conn.close()
+
+    @staticmethod
+    def clean_sql_query(query: str) -> str:
+        return query.replace('```sql', '').replace('```', '').strip()
+
+    def execute_query(self, query: str, params: tuple = ()) -> List[Dict]:
+        if not self.conn:
+            self.connect()
+        cursor = self.conn.cursor()
+        cleaned_query = self.clean_sql_query(query)
+        cursor.execute(cleaned_query, params)
+        columns = [col[0] for col in cursor.description]
+        return [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+@tool
+def product_search_tool(input: str) -> Union[List[Dict], str]:
+    """
+    Tìm kiếm thông tin liên quan tới sản phẩm và trả về các thông tin liên quan sử dụng SQLite.
+
+    Args:
+        input (str): Chuỗi tìm kiếm để tìm các sản phẩm.
+
+    Returns:
+        Union[List[Dict], str]: Kết quả tìm kiếm dưới dạng danh sách từ điển hoặc thông báo lỗi nếu có.
+    """
+    try:
+        llm = ChatGoogleGenerativeAI(temperature=0, model="gemini-1.5-flash", google_api_key=GOOGLE_API_KEY)
+        prompt = PromptTemplate(
+            template=PRODUCT_RECOMMENDATION_PROMPT,
+            input_variables=["input"]
+        )
+        
+        with ProductDataLoader(f"{DATA_PRODUCT_PATH}") as product_data_loader:
+            def execute_sql_query(query: str) -> List[Dict]:
+                return product_data_loader.execute_query(query)
+            
+            chain = (
+                {"input": RunnablePassthrough()}
+                | prompt
+                | llm
+                | (lambda x: execute_sql_query(x.content))
+            )
+            result = chain.invoke(input)
+        
+        return result
+    except Exception as e:
+        return f"An error occurred: {str(e)}"
+
+-> Đây chỉ là những prompt mẫu phù hợp cho bài toán của họ. 
+- Tôi yêu cầu bạn tham khảo cách tạo các câu prompt như thế và custom lại sao cho phù hợp với bài toán llm-food-delivery này của chúng ta. 

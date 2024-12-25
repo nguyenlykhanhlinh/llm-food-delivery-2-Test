@@ -3,7 +3,7 @@
     <div class="sticky-top">
       <button class="go-back-btn" @click="goBack">Return</button>
       <h2>{{ restaurant.name }}</h2>
-      <img  @error="onImageError" :src="!(restaurant.image==null)? restaurant.image : 'restaurant.png'" class="restaurant-card-img-fullview rounded" alt="Restaurant Image" />
+      <img  @error="onImageError" :src="!(restaurant.image==null)? restaurant.image : '@/assets/restaurant.png'" class="restaurant-card-img-fullview rounded" alt="Restaurant Image" />
       <div class="description-container">
         <p>{{ restaurant.description }}</p>
       </div>

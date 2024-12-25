@@ -1,13 +1,14 @@
-groq:
-  api_key: $GROQ_API_KEY
-  chat_model: "llama-3.1-70b-versatile"
-  whisper_model: "whisper-large-v3"
-  temperature: 0
-  max_tokens: 512
+openai:
+  api_key: $OPENAI_API_KEY
+  chat_model: "gpt-3.5-turbo"
+  temperature: 0.0
+  max_tokens: 256
+  embedding_model: "text-embedding-ada-002"
 
-qdrant:
-  url: $QDRANT_URL
-  api_key: $QDRANT_API_KEY
+
+pinecone:
+  api_key: $PINECONE_API_KEY
+  environment: $PINECONE_ENVIRONMENT
 
 prompts:
   chat:
@@ -16,7 +17,4 @@ prompts:
   functions:
     filepath: "./src/prompts/functions/signatures.json"
 
-google:
-  api_key: $GOOGLE_API_KEY
-  embedding_model: "models/text-multilingual-embedding-002"
 

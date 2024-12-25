@@ -15,7 +15,8 @@
     <div class="row justify-content-center">
         <div>
           <div class="app-container">
-            <restaurants-container ref="restaurantsContainer"  
+            
+          <restaurants-container ref="restaurantsContainer"  
               @add-to-cart="addToCart"
               @register-action="registerAction"
             >
@@ -190,7 +191,7 @@
         console.log("Handsfree toggled: " + this.handsFreeFlag)
 
       },
-      // Messages handling
+      // Messages handling - Gửi message đến backend
       sendMessage: async function(textMessage) {
         /*Sends message to backend*/ 
 
@@ -243,7 +244,7 @@
         })
       },
       generateAnswer: async function(chatHistory, function_call = true, ){
-        // Message backend interaction
+        // Message backend interaction - tương tác với backend để tạo câu trả lời
         this.botTyping = true
         axios.post(
           this.baseChatApiUrl + "/send_message", {

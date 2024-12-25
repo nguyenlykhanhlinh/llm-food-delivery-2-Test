@@ -112,8 +112,8 @@ functions:
       properties: {}
     allow: true
   
-  - name: activate_handsfree
-    description: This function activates a handsfree chat experience where you are always answering by voice to the user interface
+  - name: cancel_order
+    description: This function cancels the order that the user has in the shopping cart. It should be called if the user specifies or confirms that they want to cancel the order
     parameters:
       type: object
       properties: {}
