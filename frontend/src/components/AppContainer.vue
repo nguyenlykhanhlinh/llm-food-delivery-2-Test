@@ -15,7 +15,8 @@
     <div class="row justify-content-center">
         <div>
           <div class="app-container">
-            <restaurants-container ref="restaurantsContainer"  
+            
+          <restaurants-container ref="restaurantsContainer"  
               @add-to-cart="addToCart"
               @register-action="registerAction"
             >

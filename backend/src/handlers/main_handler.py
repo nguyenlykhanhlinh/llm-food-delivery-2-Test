@@ -1,6 +1,6 @@
 # Handlers
 from .prompt_handler import PromptHandler
-from .audio_handler import AudioHandler
+# from .audio_handler import AudioHandler
 from .vectordb_handler import VectorDBHandler
 from ..services import groq_service
 import groq
@@ -21,6 +21,6 @@ class MainHandler(ABC):
         self,
     ):
         self.prompt_handler = PromptHandler()
-        self.audio_handler = AudioHandler()
+        # self.audio_handler = AudioHandler()
         self.vectordb_handler = VectorDBHandler()
         self.groq_client = groq.Groq(api_key=CONFIG["groq"]["api_key"])

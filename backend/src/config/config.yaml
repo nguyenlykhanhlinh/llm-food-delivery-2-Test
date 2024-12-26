@@ -16,7 +16,7 @@ prompts:
   functions:
     filepath: "./src/prompts/functions/signatures.json"
 
-google:
-  api_key: $GOOGLE_API_KEY
-  embedding_model: "models/text-multilingual-embedding-002"
+huggingface:
+  api_key: $HUGGINGFACE_API_KEY
+  embedding_model: "intfloat/multilingual-e5-small"
 

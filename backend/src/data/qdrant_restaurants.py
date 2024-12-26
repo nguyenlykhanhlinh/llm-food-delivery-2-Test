@@ -1,14 +1,25 @@
-# Env variables loader
 import os
-import dotenv
-
-dotenv.load_dotenv(dotenv_path="../../.env")
-
-# Data handlers
+import sqlite3
+from uuid import uuid4
+from dotenv import load_dotenv
 import pandas as pd
 from sqlalchemy.orm import Session
+from langchain_community.vectorstores import Qdrant
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
+from langchain_groq import ChatGroq
+from langchain.schema import Document
+from langchain.prompts import PromptTemplate
+from langchain.chains import LLMChain
+from qdrant_client import QdrantClient
+from qdrant_client.models import Distance, VectorParams
+from langchain.retrievers import BM25Retriever, EnsembleRetriever, ContextualCompressionRetriever
+from langchain.retrievers.compressors import CrossEncoderReranker
+from langchain.retrievers.rankers import HuggingFaceCrossEncoder
+from langchain.prompts import ChatPromptTemplate
+from langchain.chains import RunnablePassthrough, StrOutputParser
 
-# Utils
+# Local imports
 try:
     from data_utils import get_db, get_restaurants, get_foods
     from data_models import Restaurant, Foods
@@ -18,112 +29,177 @@ except:
     from .data_models import Restaurant, Foods
     from .database import SessionLocal
 
-# Llamaindex
-from llama_index.vector_stores.qdrant import QdrantVectorStore
-from llama_index.storage.storage_context import StorageContext
-from llama_index import VectorStoreIndex, Document, ServiceContext
-from llama_index.llms import OpenAI
-from llama_index.storage.index_store import SimpleIndexStore
-from llama_index.storage.docstore import SimpleDocumentStore
-from llama_index import load_index_from_storage
-from llama_index.retrievers import BM25Retriever, BaseRetriever
-from llama_index.vector_stores.types import MetadataFilters, ExactMatchFilter
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+RAG_SEARCH_PROMPT_TEMPLATE = """
+You are an assistant helping users with their food orders based on the following context.
 
-# VDBs
-import qdrant_client
+Context:
+{context}
 
-COLLECTION_NAME = "auto-food-order"
+Question: {question}
 
+Answer:
+"""
 
-def create_collection(client, collection_name):
-    """Creates a new collection in Qdrant if it doesn't exist"""
-    try:
-        client.get_collection(collection_name)
-    except Exception:
+def process_and_store_documents():
+    print("Loading documents from SQLite...")
+    # Kết nối database
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+
+    # Lấy dữ liệu từ bảng products
+    cursor.execute('SELECT id, title, content, price, category, image_urls FROM products')
+    rows = cursor.fetchall()
+
+    # Tạo documents
+    documents = []
+    for row in rows:
+        content = f"Tiêu đề: {row[1]}\nGiá: {row[3]}\nDanh mục: {row[4]}\nMô tả: {row[2]}"
+        doc = Document(
+            page_content=content,
+            metadata={
+                "id": row[0],
+                "title": row[1],
+                "category": row[4],
+                "image_urls": row[5]  # Thêm image_urls từ database
+            }
+        )
+        documents.append(doc)
+
+    conn.close()
+    print(f"Loaded {len(documents)} documents")
+
+    print("Splitting documents...")
+    # Khởi tạo text splitter
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=500,
+        chunk_overlap=50,
+        length_function=len,
+        separators=["\n\n", "\n", ". ", " ", ""]
+    )
+
+    # Split documents
+    doc_chunks = text_splitter.split_documents(documents)
+    print(f"Created {len(doc_chunks)} chunks")
+
+    print("Loading embedding model...")
+    embeddings = HuggingFaceInferenceAPIEmbeddings(
+        model_name="intfloat/multilingual-e5-small",
+        api_key=os.getenv("HUGGINGFACE_API_KEY")
+    )
+
+    # Get dimension of the embeddings
+    embedding_dimension = len(embeddings.embed_query("hello"))
+    print(f"Embeddings dimension: {embedding_dimension}")
+
+    print("Creating Qdrant vector store...")
+    client = QdrantClient(
+        url="https://9de09ba7-f0fa-4003-9310-18b9f09eeba4.us-east4-0.gcp.cloud.qdrant.io:6333",  # Thay thế bằng URL của bạn
+        api_key="ng7DyRFNkzVhiOBgE2YEnMfiBZ3pnR0p3SirSvN484HF8C8zarF6pA"  # Thay thế bằng API key của bạn
+    )
+
+    collection_name = "products_collection_384d"  # Đặt tên collection mới
+
+    # Check if collection exists, if not then create
+    collections = client.get_collections().collections
+    collection_names = [collection.name for collection in collections]
+    if collection_name not in collection_names:
         client.create_collection(
             collection_name=collection_name,
-            vectors_config={"text": {"size": 768, "distance": "Cosine"}},  # For Google's text-embedding-002 model
+            vectors_config=VectorParams(
+                size=embedding_dimension, distance=Distance.COSINE
+            )
         )
 
+    vector_store = Qdrant(
+        client=client,
+        collection_name=collection_name,
+        embeddings=embeddings
+    )
 
-def process_restaurants():
-    # Reads data from SQLite
-    db = SessionLocal()
-    restaurants = get_restaurants(db)
-    foods = get_foods(db)
+    # Tạo unique IDs cho từng chunk
+    chunk_ids = [str(uuid4()) for _ in range(len(doc_chunks))]
 
-    # Processes the data for vector search
-    restaurant_data = [
-        {
-            "id": r.id,
-            "name": r.name,
-            "description": r.description,
-        }
-        for r in restaurants
+    # Add documents vào vector store
+    print("Adding documents to vector store...")
+    vector_store.add_documents(
+        documents=doc_chunks,
+        ids=chunk_ids
+    )
+
+    print(f"Successfully added {len(doc_chunks)} chunks to vector store")
+
+    # Khởi tạo các retrievers
+    print("Initializing retrievers...")
+    # 1. Initialize BM25 retriever
+    bm25_retriever = BM25Retriever.from_documents(
+        doc_chunks,
+        k=3
+    )
+
+    # 2. Tạo retriever từ vector store
+    vectorstore_retriever = vector_store.as_retriever(
+        search_kwargs={"k": 3}
+    )
+
+    # 3. Hybrid search
+    ensemble_retriever = EnsembleRetriever(
+        retrievers=[vectorstore_retriever, bm25_retriever], weights=[0.3, 0.7]
+    )
+
+    # Thêm đoạn code sử dụng cross encoder ranker
+    model = HuggingFaceCrossEncoder(model_name="BAAI/bge-reranker-base")
+    compressor = CrossEncoderReranker(model=model, top_n=3)
+    ensemble_retriever = ContextualCompressionRetriever(
+        base_compressor=compressor, base_retriever=ensemble_retriever
+    )
+
+    return vector_store, ensemble_retriever
+
+def main():
+    # Tạo và lưu vector store
+    vector_store, ensemble_retriever = process_and_store_documents()
+
+    prompt = ChatPromptTemplate.from_template(RAG_SEARCH_PROMPT_TEMPLATE)
+
+    llm = ChatGroq(temperature=0.3, model="llama-3.1-70b-versatile", api_key=os.getenv("GROQ_API_KEY"))
+
+    # build retrieval chain using LCEL
+    # this will take the user query and generate the answer
+    rag_chain = (
+        {"context": ensemble_retriever, "question": RunnablePassthrough()}
+        | prompt
+        | llm
+        | StrOutputParser()
+    )
+
+    # Test tìm kiếm
+    search_queries = [
+        "California Roll",
+        "Burger Phô Mai Truyền Thống",
+        "Pepperoni Pizza",
     ]
 
-    # Initialize Qdrant client
-    client = qdrant_client.QdrantClient(url=CONFIG["qdrant"]["url"], api_key=CONFIG["qdrant"]["api_key"])
+    for query in search_queries:
+        print(f"\nCâu hỏi: {query}")
 
-    # Create collection if it doesn't exist
-    create_collection(client, COLLECTION_NAME)
+        # Using similarity_search_with_score
+        results_with_score = vector_store.similarity_search_with_score(query, k=3)
+        for doc, score in results_with_score:
+            print(f"Document: {doc.page_content}\nScore: {score}\n")
 
-    # Initialize embeddings
-    embeddings = GoogleGenerativeAIEmbeddings(
-        model="models/text-multilingual-embedding-002", google_api_key=CONFIG["google"]["api_key"]
-    )
+        # Using similarity_search
+        results = vector_store.similarity_search(query, k=3)
+        for doc in results:
+            print(f"Document: {doc.page_content}\n")
 
-    # Use these embeddings with Qdrant vector store
-    vector_store = QdrantVectorStore(client=client, collection_name=COLLECTION_NAME, embedding_function=embeddings)
+        # Using similarity_search_with_relevance_scores
+        results_with_relevance_scores = vector_store.similarity_search_with_relevance_scores(query)
+        for doc, relevance_score in results_with_relevance_scores:
+            print(f"Document: {doc.page_content}\nRelevance Score: {relevance_score}\n")
 
-    storage_context = StorageContext.from_defaults(
-        vector_store=vector_store,
-    )
-
-    llm = OpenAI(model="gpt-4")
-    service_context = ServiceContext.from_defaults(chunk_size=512, llm=llm)
-    nodes = service_context.node_parser.get_nodes_from_documents(documents)
-    storage_context.docstore.add_documents(nodes)
-
-    index = VectorStoreIndex.from_documents(
-        documents=documents,
-        storage_context=storage_context,
-        service_context=service_context,
-    )
-
-    return index, nodes
-
-
-def load_index():
-    client = qdrant_client.QdrantClient(url=CONFIG["qdrant"]["url"], api_key=CONFIG["qdrant"]["api_key"])
-
-    vector_store = QdrantVectorStore(
-        client=client,
-        collection_name=COLLECTION_NAME,
-    )
-
-    storage_context = StorageContext.from_defaults(vector_store=vector_store)
-    index = VectorStoreIndex(
-        [],
-        storage_context=storage_context,
-    )
-
-    return index
-
-
-def test_connection():
-    client = qdrant_client.QdrantClient(url=CONFIG["qdrant"]["url"], api_key=CONFIG["qdrant"]["api_key"])
-    try:
-        # Try to list collections
-        collections = client.get_collections()
-        print("Successfully connected to Qdrant!")
-        print(f"Available collections: {collections}")
-        return True
-    except Exception as e:
-        print(f"Failed to connect to Qdrant: {str(e)}")
-        return False
-
+        # Using rag_chain
+        result = rag_chain.invoke(query)
+        print(f"Câu trả lời: {result}")
 
 if __name__ == "__main__":
-    test_connection()
+    main()

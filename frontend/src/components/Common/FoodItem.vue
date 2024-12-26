@@ -1,6 +1,6 @@
 <template>
   <div class="food-item">
-    <img  @error="onImageError" :src="!(food.image==null)? food.image : 'food-placeholder.png'" class="food-img" alt="Food Image" />
+    <img  @error="onImageError" :src="!(food.image==null)? food.image : '@/assets/food-placeholder.png'" class="food-img" alt="Food Image" />
     <div class="food-details">
       <h4 class="food-name">{{ food.name }}</h4>
       <p class="restaurant-name" v-if="view=='shoppingcart'">{{ food.restaurant.name}}</p>
@@ -33,7 +33,7 @@
     },
     data() {
       return {
-        quantity: 1,
+        quantity: this.food.quantity,
       };
     },
     methods: {
@@ -57,7 +57,7 @@
         }
       },
       onImageError(event) {
-        event.target.src = 'food-placeholder.png';
+        event.target.src = '@/assets/food-placeholder.png';
       }
     },
   };

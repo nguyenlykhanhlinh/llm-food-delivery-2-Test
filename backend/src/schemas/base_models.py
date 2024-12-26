@@ -1,33 +1,43 @@
 from pydantic import BaseModel
 from typing import Optional, List, Any, Dict
 
-## OpenAI schema for Chat Completion
+
+## Groq schema for Chat Completion
 class FunctionCall(BaseModel):
     name: str
     arguments: str
 
+
 class Message(BaseModel):
     content: str
     role: str
-    function_call:FunctionCall
-    
-class Choices(BaseModel):
-    finish_reason: str
-    index: int
-    message: Message
+    function_call: Optional[FunctionCall] = None
 
-class Usage(BaseModel):
-    completion_tokens: int
-    prompt_tokens: int
-    total_tokens: int
 
-class OpenAIChatCompletionResponse(BaseModel):
-    choices: Message
-    created: int
-    id: str
+class GroqChatCompletionResponse(BaseModel):
+    text: str
     model: str
-    object: str
-    usage: Usage
+    usage: Dict[str, int]
+    finish_reason: str
+
+
+## Vector Search Models
+class RestaurantSearchQuery(BaseModel):
+    name_of_restaurant: Optional[str] = None
+    type_of_restaurant: Optional[str] = None
+    food_requested: Optional[List[str]] = None
+    other_information: Optional[str] = None
+    quantity: int = 1
+
+
+class RestaurantSearchResult(BaseModel):
+    restaurant_id: int
+    restaurant_name: str
+    restaurant_description: str
+    restaurant_menu: str
+    text: str
+    score: float
+
 
 ## Message System
 class InputMessage(BaseModel):
@@ -35,19 +45,24 @@ class InputMessage(BaseModel):
     content: Any
     name: Optional[str] = None
 
+
 class InputChatHistory(BaseModel):
     history: List[InputMessage]
 
+
 class ChatRequest(BaseModel):
     query: InputChatHistory
-    function_call: bool=True
+    function_call: bool = True
 
 
 ## Audio system
 class AudioTranscriptRequest(BaseModel):
     audio: str
+
+
 class AudioResponse(BaseModel):
     message: str
+
 
 class AudioTTSRequest(BaseModel):
     text: str

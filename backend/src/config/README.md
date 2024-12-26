@@ -2,8 +2,8 @@
 
 In `config.yaml` you will find the:
 
-- OpenAI model configurations
-- Pinecone configurations
+- Groq model configurations
+- Qdrant configurations
 - Paths for different uses (e.g. prompt and functions)
 
 
