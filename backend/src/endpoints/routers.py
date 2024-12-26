@@ -1,5 +1,4 @@
 """File containing root routes"""
-
 from fastapi.routing import APIRouter
 from fastapi import Depends, HTTPException, File, UploadFile
 from fastapi.encoders import jsonable_encoder
@@ -14,15 +13,13 @@ from typing import Dict, List, Any
 # Schemas
 from src.schemas import (
     ChatRequest,
-    FunctionCall,
-    AudioTranscriptRequest,
-    AudioTTSRequest,
+    FunctionCall
 )
 from src.handlers import MainHandler
 from src.data.data_models import Restaurant, Foods
 
 # Services
-from src.services import groq_service, functions
+from src.services import openai_service, functions
 
 # Data
 from sqlalchemy.orm import Session
@@ -33,6 +30,7 @@ from typing import List, Dict
 from src.data import get_db
 from src.data.data_models import Restaurant, Foods
 
+<<<<<<< HEAD
 router = APIRouter()
 def create_router(handler: MainHandler, CONFIG: Dict) -> APIRouter:
     """Create and configure the API router
@@ -44,23 +42,46 @@ def create_router(handler: MainHandler, CONFIG: Dict) -> APIRouter:
     Returns:
         Configured APIRouter instance
     """
+=======
+def create_router(handler: MainHandler, CONFIG):
+>>>>>>> 40731b41b3bfe5317ad9c6b9b89eb31a1ced9642
     router = APIRouter()
-    client = handler.groq_client
+    client = handler.openai_client
 
     @router.post("/chat/send_message")
     async def send_message(prompt_request: ChatRequest) -> Dict:
         """Handle chat messages and generate responses"""
         prompt_handler = handler.prompt_handler
+<<<<<<< HEAD
         messages = prompt_handler.get_messages(prompt_request)
 
+=======
+        
+        # Collects the messages in a list of dicts
+        messages = prompt_handler.get_messages(prompt_request)
+        
+        # For function calling functionality
+>>>>>>> 40731b41b3bfe5317ad9c6b9b89eb31a1ced9642
         functions = []
         if prompt_request.function_call:
             functions = prompt_handler.get_functions()
-
+        
         try:
+<<<<<<< HEAD
             prompt_response = await groq_service.chat_completion(
                 messages=messages, CONFIG=CONFIG, functions=functions, client=client
             )
+=======
+            # Calls the main chat completion function
+            prompt_response = await openai_service.chat_completion(
+                messages=messages,
+                CONFIG=CONFIG,
+                functions=functions,
+                client=client
+            )
+            
+            # Formats and returns
+>>>>>>> 40731b41b3bfe5317ad9c6b9b89eb31a1ced9642
             response = prompt_handler.prepare_response(prompt_response)
         except Exception as e:
             logging.error(f"Chat error: {str(e)}")
@@ -69,7 +90,7 @@ def create_router(handler: MainHandler, CONFIG: Dict) -> APIRouter:
                 "function_call": None,
             }
         return response
-
+    
     @router.post("/chat/function_call")
     async def function_call(function_call: FunctionCall) -> Dict:
         """Execute function calls from frontend"""
@@ -78,6 +99,7 @@ def create_router(handler: MainHandler, CONFIG: Dict) -> APIRouter:
         function_arguments = json.loads(function_call_properties["arguments"])
 
         available_functions = {
+<<<<<<< HEAD
             "get_restaurant_pages": lambda kwargs: functions.find_restaurant_pages(
                 CONFIG=CONFIG, **kwargs
             ),
@@ -99,9 +121,24 @@ def create_router(handler: MainHandler, CONFIG: Dict) -> APIRouter:
             "close_shopping_cart": lambda _: functions.dummy_function(),
             "place_order": lambda _: functions.dummy_function(),
             "activate_handsfree": lambda _: functions.dummy_function(),
+=======
+            # Obs: all functions need to be async
+            "get_restaurant_pages": lambda kwargs: functions.find_restaurant_pages(CONFIG=CONFIG, **kwargs),
+            "open_restaurant_page": lambda kwargs: functions.open_restaurant_page(CONFIG=CONFIG, **kwargs),
+            "close_restaurant_page": lambda _: functions.dummy_function(), # dummy function - no need of information
+            "get_user_actions": lambda _: functions.dummy_function(), # dummy function - actions are stored in the frontend
+            "get_menu_of_restaurant": lambda kwargs: functions.get_menu_of_restaurant(CONFIG=CONFIG, **kwargs),
+            "add_food_to_cart": lambda kwargs: functions.add_food_to_cart(CONFIG=CONFIG, **kwargs),
+            "remove_food_from_cart": lambda kwargs: functions.remove_food_from_cart(CONFIG=CONFIG, **kwargs),
+            "open_shopping_cart": lambda _: functions.dummy_function(), # dummy function - no need of information
+            "close_shopping_cart": lambda _: functions.dummy_function(), # dummy function - no need of information
+            "place_order": lambda _: functions.dummy_function(), # dummy function - no need of information
+            "activate_handsfree": lambda _: functions.dummy_function(), # dummy function - no need of information
+>>>>>>> 40731b41b3bfe5317ad9c6b9b89eb31a1ced9642
         }
 
         function_response = await available_functions[function_name](function_arguments)
+<<<<<<< HEAD
         return {"response": function_response}
 
     @router.post("/chat/transcribe")
@@ -153,6 +190,16 @@ def create_router(handler: MainHandler, CONFIG: Dict) -> APIRouter:
             for r in restaurants
         ]
 
+=======
+        
+        return {"response": function_response}
+
+    ## Retrieving from the database
+    @router.get("/restaurants/")
+    def get_restaurants(db: Session = Depends(get_db)):
+        return db.query(Restaurant).all()
+    
+>>>>>>> 40731b41b3bfe5317ad9c6b9b89eb31a1ced9642
     @router.get("/restaurants/{restaurant_id}/foods/")
     def get_foods_from_restaurant(
         restaurant_id: int, db: Session = Depends(get_db)
@@ -163,6 +210,7 @@ def create_router(handler: MainHandler, CONFIG: Dict) -> APIRouter:
             raise HTTPException(status_code=404, detail="Restaurant not found")
 
         foods = db.query(Foods).filter(Foods.restaurant_id == restaurant_id).all()
+<<<<<<< HEAD
         return [
             {
                 "id": f.id,
@@ -174,4 +222,9 @@ def create_router(handler: MainHandler, CONFIG: Dict) -> APIRouter:
             for f in foods
         ]
 
+=======
+        return foods
+    
+>>>>>>> 40731b41b3bfe5317ad9c6b9b89eb31a1ced9642
     return router
+    

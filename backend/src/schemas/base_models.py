@@ -55,6 +55,7 @@ class ChatRequest(BaseModel):
     function_call: bool = True
 
 
+<<<<<<< HEAD
 ## Audio system
 class AudioTranscriptRequest(BaseModel):
     audio: str
@@ -66,3 +67,5 @@ class AudioResponse(BaseModel):
 
 class AudioTTSRequest(BaseModel):
     text: str
+=======
+>>>>>>> 40731b41b3bfe5317ad9c6b9b89eb31a1ced9642

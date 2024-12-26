@@ -1,9 +1,5 @@
 from src.utils import get_retriever
-from llama_index.core.vector_stores import (
-    MetadataFilter,
-    MetadataFilters,
-    FilterOperator,
-)
+from llama_index.core.vector_stores.types import ExactMatchFilter
 from tenacity import retry, wait_random, stop_after_attempt
 
 @retry(wait=wait_random(min=1, max=5), stop=stop_after_attempt(5))
@@ -25,7 +21,7 @@ async def find_restaurant_pages(
     )
 
     retriever = get_retriever(
-        index_name="auto-food-order",
+        index_name="llm-food",
         CONFIG=CONFIG,
         top_k=quantity,
         filter=[ExactMatchFilter(key="search_type", value="restaurant")]
